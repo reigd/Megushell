@@ -915,7 +915,10 @@ void DockModel::transferToLeftSection(int from, int to)
         return;
     }
 
-    const DockItemEntry& entry = m_entries.at(from);
+    // Copy, not a reference: refresh() below rebuilds m_entries and would dangle
+    // the reference before clearRightSectionPin(entry) reads it (use-after-free crash
+    // when dragging a transient app into the pinned section).
+    const DockItemEntry entry = m_entries.at(from);
     if (entry.kind != QLatin1String("app")) {
         return;
     }
