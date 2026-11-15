@@ -299,7 +299,9 @@ Window {
     function finishSectionChangeLayout() {
         Qt.callLater(function() {
             dockWindow.sectionChangeAnchorCenterX = -1
-            dockWindow.syncAnimatedPillWidth(true)
+            // Animate (not snap) the pill width to its final size so the trailing
+            // shell section (Downloads/Trash) expands smoothly instead of jumping.
+            dockWindow.syncAnimatedPillWidth(false)
             dockWindow.publishDropGeometry()
             Qt.callLater(dockWindow.refreshClickHitRegions)
         })
@@ -1181,12 +1183,15 @@ Window {
             return
         }
         if (immediate || externalPinPreview || externalPinCommitting || unpinCommitting
-                || sectionChangeAnchorCenterX >= 0
                 || dockPackAnim.running) {
             dockChromeWidthAnim.stop()
             animatedPillWidth = dockPillWidth
             return
         }
+        // During a cross-section (pinned<->transient) transfer, animate the pill
+        // width from the previous size to the new one instead of snapping instantly.
+        // sectionChangeAnchorCenterX still anchors the window center; only the
+        // immediate-snap path is removed here to keep the expansion smooth (macOS-like).
         if (Math.abs(animatedPillWidth - dockPillWidth) < 0.5) {
             animatedPillWidth = dockPillWidth
             return
